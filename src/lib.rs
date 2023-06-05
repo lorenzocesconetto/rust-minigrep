@@ -27,19 +27,26 @@ pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a st
         .filter(|item| item.to_lowercase().contains(&query))
         .collect()
 }
-pub struct Config<'a> {
-    pub query: &'a str,
-    pub file_path: &'a str,
+pub struct Config {
+    pub query: String,
+    pub file_path: String,
     pub ignore_case: bool,
 }
 
-impl<'a> Config<'a> {
-    pub fn build(args: &[String]) -> Result<Config, &str> {
-        if args.len() < 3 {
-            return Err("Not enough arguments");
-        }
-        let query = &args[1];
-        let file_path = &args[2];
+impl Config {
+    pub fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        args.next(); // Throw away first item which is just the name of the program
+
+        let query = match args.next() {
+            Some(x) => x,
+            None => return Err("Missing argument: query"),
+        };
+
+        let file_path = match args.next() {
+            Some(x) => x,
+            None => return Err("Missing argument: file path"),
+        };
+
         let ignore_case = env::var("IGNORE_CASE").is_ok();
         Ok(Config {
             query,
